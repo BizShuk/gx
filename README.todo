@@ -3,9 +3,9 @@
 ## 待辦 (Pending)
 
 - [ ] 補上第 2 個領域子命令（尚未指定，命令樹與 svc 結構已備妥）
-- [ ] `youtube get channel` 支援批次輸入（多個 handle / 從 stdin 讀）
+- [x] `youtube get channel` 支援批次輸入（多個 handle / 從 stdin 讀）
 - [ ] 評估是否需要 `youtube get video`（影片 ID / 標題 / 頻道）
-- [ ] cmd 層目前無測試，待第二個領域加入後補上命令樹掛載的迴歸測試
+- [x] cmd 層補上 `youtube get channel` 的單元與批次測試
 
 ## 已知限制 (Known Limitations)
 

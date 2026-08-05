@@ -34,8 +34,13 @@ YouTube 的 `@handle` 換成 `UCxxx` 頻道 ID 就是典型例子。這類查詢
 gx youtube get channel @YouTube
 # https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ
 
-gx youtube get channel @YouTube --id
+gx youtube get channel @YouTube @NASA
+# https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ
+# https://www.youtube.com/channel/UC2wK54dY22Z16-aG6Z3Ld-g
+
+cat handles.txt | gx youtube get channel --id
 # UCBR8-60-B28hp2BmDPdntcQ
+# UC2wK54dY22Z16-aG6Z3Ld-g
 
 gx youtube get channel https://www.youtube.com/@YouTube/videos --json
 # {
