@@ -1,0 +1,14 @@
+# README.todo
+
+## 待辦 (Pending)
+
+- [ ] 補上第 2 個領域子命令（尚未指定，命令樹與 svc 結構已備妥）
+- [ ] `youtube get channel` 支援批次輸入（多個 handle / 從 stdin 讀）
+- [ ] 評估是否需要 `youtube get video`（影片 ID / 標題 / 頻道）
+- [ ] cmd 層目前無測試，待第二個領域加入後補上命令樹掛載的迴歸測試
+
+## 已知限制 (Known Limitations)
+
+- 依賴 YouTube 公開頁面的 HTML 結構；對方改版時 `svc/youtube/extract.go`
+  的比對規則需要跟著調整（規則已依可靠度排序，通常只會退到下一條）。
+- 未處理需要登入或地區封鎖的頻道。

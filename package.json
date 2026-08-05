@@ -1,0 +1,14 @@
+{
+  "name": "gx",
+  "version": "0.0.0",
+  "private": true,
+  "description": "通用擷取 CLI：把公開網頁的一次性 curl|grep 收斂成可測試的子命令（youtube get channel 等）",
+  "scripts": {
+    "dev": "go run .",
+    "test": "go test ./...",
+    "build": "go build -o bin/gx .",
+    "deploy": "go install .",
+    "lint": "go fmt ./... && go vet ./...",
+    "clean": "rm -rf bin"
+  }
+}
