@@ -25,8 +25,10 @@ func setupTestServer(t *testing.T) *httptest.Server {
 func executeCmd(args []string, in string) (string, error) {
 	channelAsJSON = false
 	channelIDOnly = false
+	channelRSSOnly = false
 	_ = channelCmd.Flags().Set("json", "false")
 	_ = channelCmd.Flags().Set("id", "false")
+	_ = channelCmd.Flags().Set("rss", "false")
 
 	var out bytes.Buffer
 	Cmd.SetOut(&out)
@@ -64,6 +66,23 @@ func TestChannelCmd_SingleArgJSON(t *testing.T) {
 
 	if !strings.Contains(got, `"id": "`+testChannelID+`"`) {
 		t.Errorf("JSON output does not contain expected channel ID: %s", got)
+	}
+	if !strings.Contains(got, `/feeds/videos.xml?channel_id=`+testChannelID) {
+		t.Errorf("JSON output does not contain official RSS: %s", got)
+	}
+}
+
+func TestChannelCmd_RSSFlag(t *testing.T) {
+	srv := setupTestServer(t)
+
+	got, err := executeCmd([]string{testChannelID, "--rss"}, "")
+	if err != nil {
+		t.Fatalf("Execute() error: %v", err)
+	}
+
+	want := srv.URL + "/feeds/videos.xml?channel_id=" + testChannelID + "\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 

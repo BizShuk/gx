@@ -4,7 +4,7 @@
 
 | 術語       | 定義                                                                 |
 | ---------- | -------------------------------------------------------------------- |
-| `domain`   | 資料來源領域，命令樹第一段，對應 `cmd/<domain>/` 與 `svc/<domain>/`。 |
+| `domain`   | 資料來源領域，命令樹第一段，對應 `cmd/<domain>/` 與 `svc/<domain>/`。目前有 `youtube`、`bilibili`。 |
 | `verb`     | 動作，命令樹第二段。目前只有 `get`（唯讀查詢）。                     |
 | `resource` | 目標資源，命令樹第三段，實際發出請求並輸出結果的葉命令。             |
 
@@ -15,8 +15,18 @@
 | handle              | YouTube 頻道的人類可讀名稱，以 `@` 開頭，如 `@YouTube`。本專案一律正規化成含 `@`。 |
 | channel ID          | 頻道的機器識別碼，`UC` 開頭加 22 個 base64url 字元，如 `UCBR8-60-B28hp2BmDPdntcQ`。 |
 | canonical URL       | 由 channel ID 組成的正規頻道網址 `<base>/channel/<id>`，本工具的預設輸出。        |
+| official RSS        | YouTube 平台自己發的頻道 feed：`<base>/feeds/videos.xml?channel_id=<id>`。        |
 | `Target`            | `svc/youtube` 對輸入的解析結果：帶 ID 時填 `ID`，否則填 `Handle`。               |
 | lookalike token     | 頁面中與 channel ID 同形狀但意義不同的隨機字串（visitor data 等），必須排除。     |
+
+## Bilibili 領域
+
+| 術語          | 定義                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| space UID     | UP 主空間的機器識別碼，十進位數字、不以 0 開頭，如 `2267573`。對應 URL 路徑上的那串數字。     |
+| space URL     | 由 UID 組成的正規空間網址 `<base>/<uid>`，預設 `https://space.bilibili.com/<uid>`。           |
+| `channel`     | 命令樹的 resource 名，與 youtube 對齊；在本領域對應的是 UP 主空間，不是合集或單支影片。       |
+| official RSS  | 不存在。Bilibili 不為空間提供 feed；第三方合成源（RSSHub 等）不是本工具的輸出。               |
 
 ## 設定
 

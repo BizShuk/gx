@@ -34,3 +34,4 @@
 ## 索引 (Entries)
 
 - [2026-08-05 — YouTube 頻道 ID 不能只靠形狀比對](2026-08-05-youtube-channel-id-extraction.md)
+- [2026-09-13 — Bilibili 沒有官方 channel RSS](2026-09-13-bilibili-no-official-rss.md)

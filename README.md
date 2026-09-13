@@ -20,7 +20,7 @@ YouTube 的 `@handle` 換成 `UCxxx` 頻道 ID 就是典型例子。這類查詢
 
 | 段落       | 意義           | 範例                     |
 | ---------- | -------------- | ------------------------ |
-| `domain`   | 資料來源領域   | `youtube`                |
+| `domain`   | 資料來源領域   | `youtube`、`bilibili`    |
 | `verb`     | 動作           | `get`                    |
 | `resource` | 目標資源       | `channel`                |
 
@@ -46,8 +46,12 @@ gx youtube get channel https://www.youtube.com/@YouTube/videos --json
 # {
 #   "handle": "@YouTube",
 #   "id": "UCBR8-60-B28hp2BmDPdntcQ",
-#   "url": "https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ"
+#   "url": "https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ",
+#   "rss": "https://www.youtube.com/feeds/videos.xml?channel_id=UCBR8-60-B28hp2BmDPdntcQ"
 # }
+
+gx youtube get channel @YouTube --rss
+# https://www.youtube.com/feeds/videos.xml?channel_id=UCBR8-60-B28hp2BmDPdntcQ
 ```
 
 接受的輸入寫法：
@@ -58,7 +62,35 @@ gx youtube get channel https://www.youtube.com/@YouTube/videos --json
 - `https://www.youtube.com/channel/UCxxx`、`UCxxx`（已含 ID 時不發請求）
 
 流程：正規化輸入 → 取得頻道頁 HTML → 在 canonical link / `channelId` 欄位的上下文中
-比對 ID → 組出正規網址。找不到頻道時以 `channel @xxx not found` 結束，離開碼 1。
+比對 ID → 組出正規網址與官方 RSS（`/feeds/videos.xml?channel_id=`）。找不到頻道時以
+`channel @xxx not found` 結束，離開碼 1。
+
+### bilibili get channel
+
+把 UP 主空間的 UID 或網址解析成正規的空間網址。Bilibili 沒有官方 channel RSS，
+本命令不輸出 feed、也不代填 RSSHub 等第三方合成源。
+
+```bash
+gx bilibili get channel 2267573
+# https://space.bilibili.com/2267573
+
+gx bilibili get channel https://space.bilibili.com/2267573/video --id
+# 2267573
+
+gx bilibili get channel 2267573 --json
+# {
+#   "id": "2267573",
+#   "url": "https://space.bilibili.com/2267573"
+# }
+```
+
+接受的輸入寫法：
+
+- `2267573`（裸 UID）
+- `https://space.bilibili.com/2267573`（含 `/video`、合集子頁與追蹤參數）
+- `https://m.bilibili.com/space/2267573`
+
+UID 已在輸入裡時不發請求。單支影片網址、暱稱、`b23.tv` 短鏈不是空間識別碼，以錯誤結束。
 
 ## 設定 (Configuration)
 
@@ -70,6 +102,7 @@ gx youtube get channel https://www.youtube.com/@YouTube/videos --json
 | `http_timeout`     | `10s`                      | 單次 HTTP 請求上限         |
 | `http_user_agent`  | 桌面版 Chrome UA           | 避免拿到精簡版頁面         |
 | `youtube_base_url` | `https://www.youtube.com`  | YouTube 頁面來源網域       |
+| `bilibili_base_url` | `https://space.bilibili.com` | Bilibili 空間頁來源網域 |
 
 檢視與修改：`gx config`（由 gosdk 提供）。
 

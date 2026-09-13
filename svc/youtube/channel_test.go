@@ -33,6 +33,9 @@ func TestGetChannelResolvesHandle(t *testing.T) {
 	if want := srv.URL + "/channel/" + testChannelID; channel.URL != want {
 		t.Errorf("channel.URL = %q, want %q", channel.URL, want)
 	}
+	if want := srv.URL + "/feeds/videos.xml?channel_id=" + testChannelID; channel.RSS != want {
+		t.Errorf("channel.RSS = %q, want %q", channel.RSS, want)
+	}
 }
 
 // 輸入已經是頻道 ID 時不該發出任何請求。
@@ -48,6 +51,9 @@ func TestGetChannelSkipsFetchForChannelID(t *testing.T) {
 	}
 	if channel.ID != testChannelID {
 		t.Errorf("channel.ID = %q, want %q", channel.ID, testChannelID)
+	}
+	if want := srv.URL + "/feeds/videos.xml?channel_id=" + testChannelID; channel.RSS != want {
+		t.Errorf("channel.RSS = %q, want %q", channel.RSS, want)
 	}
 }
 

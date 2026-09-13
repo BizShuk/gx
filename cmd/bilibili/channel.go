@@ -1,4 +1,4 @@
-package youtube
+package bilibili
 
 import (
 	"bufio"
@@ -6,29 +6,28 @@ import (
 	"strings"
 
 	"github.com/bizshuk/gx/render"
-	svc "github.com/bizshuk/gx/svc/youtube"
+	svc "github.com/bizshuk/gx/svc/bilibili"
 	"github.com/spf13/cobra"
 )
 
 var (
-	channelAsJSON  bool
-	channelIDOnly  bool
-	channelRSSOnly bool
+	channelAsJSON bool
+	channelIDOnly bool
 )
 
-// channelCmd 由 handle 解析頻道 ID、正規網址與官方 RSS。
+// channelCmd 由 UID 或空間網址解析出正規的空間網址。
 var channelCmd = &cobra.Command{
-	Use:   "channel [handle|url|id...]",
-	Short: "解析頻道 ID、正規網址與官方 RSS",
-	Long: `由 @handle、頻道網址或頻道 ID 解析出正規的 channel 網址與官方 RSS feed。
+	Use:   "channel [uid|url...]",
+	Short: "解析 UP 主空間 UID 與正規網址",
+	Long: `由空間 UID 或 space.bilibili.com 網址解析出正規的空間網址。
+Bilibili 沒有官方 channel RSS，本命令不輸出 feed。
 支援傳入多個目標或由 stdin 讀取。
 
 範例:
-  gx youtube get channel @YouTube
-  gx youtube get channel @YouTube @NASA --json
-  cat handles.txt | gx youtube get channel --id
-  gx youtube get channel @YouTube --rss
-  gx youtube get channel - < handles.txt`,
+  gx bilibili get channel 2267573
+  gx bilibili get channel https://space.bilibili.com/2267573/video --id
+  gx bilibili get channel 2267573 --json
+  cat uids.txt | gx bilibili get channel --id`,
 	Args: cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		targets, err := parseTargets(cmd, args)
@@ -71,14 +70,9 @@ var channelCmd = &cobra.Command{
 			}
 		} else {
 			for _, ch := range results {
-				var line string
-				switch {
-				case channelIDOnly:
+				line := ch.URL
+				if channelIDOnly {
 					line = ch.ID
-				case channelRSSOnly:
-					line = ch.RSS
-				default:
-					line = ch.URL
 				}
 				if _, err := fmt.Fprintln(out, line); err != nil {
 					return err
@@ -110,13 +104,12 @@ func parseTargets(cmd *cobra.Command, args []string) ([]string, error) {
 		return nil, fmt.Errorf("read stdin: %w", err)
 	}
 	if len(targets) == 0 {
-		return nil, fmt.Errorf("at least one target (handle, url, or id) is required")
+		return nil, fmt.Errorf("at least one target (uid or url) is required")
 	}
 	return targets, nil
 }
 
 func init() {
 	channelCmd.Flags().BoolVar(&channelAsJSON, "json", false, "以 JSON 輸出完整結果")
-	channelCmd.Flags().BoolVar(&channelIDOnly, "id", false, "只輸出頻道 ID")
-	channelCmd.Flags().BoolVar(&channelRSSOnly, "rss", false, "只輸出官方 RSS feed 網址")
+	channelCmd.Flags().BoolVar(&channelIDOnly, "id", false, "只輸出空間 UID")
 }

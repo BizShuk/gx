@@ -8,19 +8,25 @@ gx/
 ├── go.mod                       # module github.com/bizshuk/gx, Go 1.26
 ├── cmd/                         # 命令層：只負責旗標解析與輸出，不含業務邏輯
 │   ├── root.go                  # RootCmd + Execute()，掛載各領域命令
-│   └── youtube/                 # youtube 領域命令樹
-│       ├── youtube.go           # Cmd：領域父命令
-│       ├── get.go               # getCmd：讀取類動作
-│       └── channel.go           # channelCmd：--json / --id 旗標與輸出
+│   ├── youtube/                 # youtube 領域命令樹
+│   │   ├── youtube.go           # Cmd：領域父命令
+│   │   ├── get.go               # getCmd：讀取類動作
+│   │   └── channel.go           # channelCmd：--json / --id / --rss 旗標與輸出
+│   └── bilibili/                # bilibili 領域命令樹（結構同 youtube）
 ├── svc/                         # 服務層：對外請求與解析
-│   └── youtube/
-│       ├── client.go            # Client、fetch()、ErrNotFound、預設常數
-│       ├── option.go            # 函式選項 + viper key（設定讀取在此收斂）
-│       ├── target.go            # ParseTarget()：輸入正規化成 handle 或 ID
-│       ├── extract.go           # ExtractChannelID()：頁面 HTML 的 ID 比對規則
-│       ├── channel.go           # Channel 模型 + GetChannel()
-│       ├── target_test.go
-│       └── channel_test.go
+│   ├── youtube/
+│   │   ├── client.go            # Client、fetch()、ErrNotFound、預設常數
+│   │   ├── option.go            # 函式選項 + viper key（設定讀取在此收斂）
+│   │   ├── target.go            # ParseTarget()：輸入正規化成 handle 或 ID
+│   │   ├── extract.go           # ExtractChannelID()：頁面 HTML 的 ID 比對規則
+│   │   ├── channel.go           # Channel 模型 + GetChannel() + 官方 RSS
+│   │   ├── target_test.go
+│   │   └── channel_test.go
+│   └── bilibili/
+│       ├── client.go            # Client、DEFAULT_BASE_URL（UID 已在輸入時不發請求）
+│       ├── option.go            # 函式選項 + viper key
+│       ├── target.go            # ParseTarget()：UID / 空間網址
+│       └── channel.go           # Channel 模型 + GetChannel()；無 rss 欄位
 ├── render/
 │   └── json.go                  # 各子命令共用的 --json 輸出
 ├── config/
@@ -59,6 +65,16 @@ gx/
 
 函式選項的存在理由是測試：`WithBaseURL(srv.URL)` 讓測試指向 `httptest` 伺服器。
 
+### Bilibili 沒有官方 channel RSS，不代填第三方源
+
+YouTube 頻道有平台自己發的 `/feeds/videos.xml?channel_id=`，所以
+`gx youtube get channel` 的 JSON 帶 `rss`，`--rss` 只印那條網址。
+
+Bilibili 的 UP 主空間沒有對等的官方 feed（舊的分區 `/rss-N.xml` 已下線）。
+生態裡看得到的「B 站 RSS」是 RSSHub 等第三方打簽名 JSON API 再包成 XML。
+那些網址不是來源站的公開頁、公共實例也不穩定，因此
+`gx bilibili get channel` 只回 UID 與空間網址，JSON **沒有** `rss` 欄位。
+
 ### 頻道 ID 一律在上下文中比對，不比對 ID 形狀
 
 YouTube 頻道頁的 HTML 裡散落大量與頻道 ID 同形狀（`UC` + 22 字元 base64url）的隨機
@@ -88,4 +104,4 @@ npm run build                                  # go build -o bin/gx .
 ```
 
 測試不打外部網路：`svc/youtube` 的測試全部走 `httptest` 伺服器，
-以 `WithBaseURL` 注入。
+以 `WithBaseURL` 注入。`svc/bilibili` 的 UID 已在輸入裡，測試不發 HTTP。
