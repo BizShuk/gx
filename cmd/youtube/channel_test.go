@@ -2,20 +2,25 @@ package youtube
 
 import (
 	"bytes"
-
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/bizshuk/gx/model"
 	"github.com/spf13/viper"
 )
 
-const testChannelID = "UCBR8-60-B28hp2BmDPdntcQ"
+const (
+	testChannelID = "UCBR8-60-B28hp2BmDPdntcQ"
+	testTitle     = "YouTube &amp; Friends"
+)
 
 func setupTestServer(t *testing.T) *httptest.Server {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<link rel="canonical" href="https://www.youtube.com/channel/` + testChannelID + `">`))
+		w.Write([]byte(`<link rel="canonical" href="https://www.youtube.com/channel/` + testChannelID + `">` +
+			`<meta property="og:title" content="` + testTitle + `">`))
 	}))
 	t.Cleanup(srv.Close)
 	viper.Set("youtube_base_url", srv.URL)
@@ -24,11 +29,7 @@ func setupTestServer(t *testing.T) *httptest.Server {
 
 func executeCmd(args []string, in string) (string, error) {
 	channelAsJSON = false
-	channelIDOnly = false
-	channelRSSOnly = false
 	_ = channelCmd.Flags().Set("json", "false")
-	_ = channelCmd.Flags().Set("id", "false")
-	_ = channelCmd.Flags().Set("rss", "false")
 
 	var out bytes.Buffer
 	Cmd.SetOut(&out)
@@ -42,89 +43,73 @@ func executeCmd(args []string, in string) (string, error) {
 	return out.String(), err
 }
 
-func TestChannelCmd_SingleArg(t *testing.T) {
+func wantLines(base string) string {
+	return "platform: youtube\n" +
+		"id: " + testChannelID + "\n" +
+		"handle: @YouTube\n" +
+		"title: YouTube & Friends\n" +
+		"url: " + base + "/channel/" + testChannelID + "\n" +
+		"rss: " + base + "/feeds/videos.xml?channel_id=" + testChannelID + "\n"
+}
+
+func TestChannelCmd_SingleArgLines(t *testing.T) {
 	srv := setupTestServer(t)
 
 	got, err := executeCmd([]string{"@YouTube"}, "")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
-
-	want := srv.URL + "/channel/" + testChannelID + "\n"
-	if got != want {
+	if want := wantLines(srv.URL); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
-func TestChannelCmd_SingleArgJSON(t *testing.T) {
-	setupTestServer(t)
+// --json 單筆也輸出陣列：呼叫端不必依目標數量切換解析方式。
+func TestChannelCmd_SingleArgJSONIsArray(t *testing.T) {
+	srv := setupTestServer(t)
 
 	got, err := executeCmd([]string{"@YouTube", "--json"}, "")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
 
-	if !strings.Contains(got, `"id": "`+testChannelID+`"`) {
-		t.Errorf("JSON output does not contain expected channel ID: %s", got)
+	var channels []model.Channel
+	if err := json.Unmarshal([]byte(got), &channels); err != nil {
+		t.Fatalf("output is not a JSON array: %v\n%s", err, got)
 	}
-	if !strings.Contains(got, `/feeds/videos.xml?channel_id=`+testChannelID) {
-		t.Errorf("JSON output does not contain official RSS: %s", got)
+	want := model.Channel{
+		Platform: model.PLATFORM_YOUTUBE,
+		ID:       testChannelID,
+		Handle:   "@YouTube",
+		Title:    "YouTube & Friends",
+		URL:      srv.URL + "/channel/" + testChannelID,
+		RSS:      srv.URL + "/feeds/videos.xml?channel_id=" + testChannelID,
+	}
+	if len(channels) != 1 || channels[0] != want {
+		t.Errorf("got %+v, want [%+v]", channels, want)
 	}
 }
 
-func TestChannelCmd_RSSFlag(t *testing.T) {
+func TestChannelCmd_MultipleArgsLines(t *testing.T) {
 	srv := setupTestServer(t)
 
-	got, err := executeCmd([]string{testChannelID, "--rss"}, "")
+	got, err := executeCmd([]string{"@YouTube", "@YouTube"}, "")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
-
-	want := srv.URL + "/feeds/videos.xml?channel_id=" + testChannelID + "\n"
-	if got != want {
+	if want := wantLines(srv.URL) + "\n" + wantLines(srv.URL); got != want {
 		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
-func TestChannelCmd_MultipleArgs(t *testing.T) {
-	srv := setupTestServer(t)
-
-	got, err := executeCmd([]string{"@YouTube", "@NASA"}, "")
-	if err != nil {
-		t.Fatalf("Execute() error: %v", err)
-	}
-
-	expectedURL := srv.URL + "/channel/" + testChannelID
-	want := expectedURL + "\n" + expectedURL + "\n"
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
-func TestChannelCmd_MultipleArgsJSON(t *testing.T) {
-	setupTestServer(t)
-
-	got, err := executeCmd([]string{"@YouTube", "@NASA", "--json"}, "")
-	if err != nil {
-		t.Fatalf("Execute() error: %v", err)
-	}
-
-	if !strings.HasPrefix(strings.TrimSpace(got), "[") {
-		t.Errorf("expected JSON array output, got: %s", got)
 	}
 }
 
 func TestChannelCmd_Stdin(t *testing.T) {
 	srv := setupTestServer(t)
 
-	got, err := executeCmd([]string{}, "@YouTube\n@NASA\n")
+	got, err := executeCmd([]string{}, "@YouTube\n@YouTube\n")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
-
-	expectedURL := srv.URL + "/channel/" + testChannelID
-	want := expectedURL + "\n" + expectedURL + "\n"
-	if got != want {
+	if want := wantLines(srv.URL) + "\n" + wantLines(srv.URL); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
 }

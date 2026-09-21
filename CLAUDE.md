@@ -11,24 +11,29 @@ gx/
 │   ├── youtube/                 # youtube 領域命令樹
 │   │   ├── youtube.go           # Cmd：領域父命令
 │   │   ├── get.go               # getCmd：讀取類動作
-│   │   └── channel.go           # channelCmd：--json / --id / --rss 旗標與輸出
-│   └── bilibili/                # bilibili 領域命令樹（結構同 youtube）
+│   │   └── channel.go           # channelCmd：--json 旗標，流程交給 lookup
+│   ├── bilibili/                # bilibili 領域命令樹（結構同 youtube）
+│   └── lookup/
+│       └── lookup.go            # 各平台 get channel 共用流程：讀目標、查詢、輸出
 ├── svc/                         # 服務層：對外請求與解析
 │   ├── youtube/
 │   │   ├── client.go            # Client、fetch()、ErrNotFound、預設常數
 │   │   ├── option.go            # 函式選項 + viper key（設定讀取在此收斂）
 │   │   ├── target.go            # ParseTarget()：輸入正規化成 handle 或 ID
-│   │   ├── extract.go           # ExtractChannelID()：頁面 HTML 的 ID 比對規則
-│   │   ├── channel.go           # Channel 模型 + GetChannel() + 官方 RSS
+│   │   ├── extract.go           # ExtractChannelID() / ExtractChannelTitle()：頁面比對規則
+│   │   ├── channel.go           # GetChannel()：ID、名稱、官方 RSS
 │   │   ├── target_test.go
 │   │   └── channel_test.go
 │   └── bilibili/
 │       ├── client.go            # Client、DEFAULT_BASE_URL（UID 已在輸入時不發請求）
 │       ├── option.go            # 函式選項 + viper key
 │       ├── target.go            # ParseTarget()：UID / 空間網址
-│       └── channel.go           # Channel 模型 + GetChannel()；無 rss 欄位
+│       └── channel.go           # GetChannel()；無 rss、無名稱
+├── model/
+│   └── channel.go               # 各平台共用的標準輸出物件 Channel
 ├── render/
-│   └── json.go                  # 各子命令共用的 --json 輸出
+│   ├── json.go                  # --json：一律輸出陣列
+│   └── lines.go                 # 預設：每行一個 key: value，記錄間空行
 ├── config/
 │   ├── config.go                # config.Default()：gosdk 設定載入
 │   └── default_settings.json    # 內嵌預設值，首次執行時寫入 ~/.config/gx/
@@ -65,15 +70,31 @@ gx/
 
 函式選項的存在理由是測試：`WithBaseURL(srv.URL)` 讓測試指向 `httptest` 伺服器。
 
+### 輸出物件標準化：一個 Channel，兩種呈現
+
+所有平台的 `get channel` 都回 `model.Channel`（`platform` / `id` / `handle` /
+`title` / `url` / `rss`），平台沒有的欄位留空並省略。輸出只有兩種：
+預設逐行 `key: value`（多筆以空行分隔），`--json` 一律輸出陣列（單筆也是）。
+
+不再提供 `--id`、`--rss` 這類單欄位旗標：每多一個欄位就要多一個旗標，
+而且單筆物件、多筆陣列的切換讓呼叫端得先數目標才知道怎麼解析。
+程式呼叫端一律 `--json` 後自取欄位。
+
+### 頻道名稱來自頻道頁，不來自 RSS
+
+名稱依序取 `og:title`（HTML unescape）與 `channelMetadataRenderer.title`（JSON 字串）。
+官方 RSS 會對個別頻道持續回 404/500，不能當名稱來源。因此輸入已是頻道 ID 時
+仍會抓一次 `/channel/<id>` 頁面。取不到名稱不算失敗，`title` 留空。
+
 ### Bilibili 沒有官方 channel RSS，不代填第三方源
 
 YouTube 頻道有平台自己發的 `/feeds/videos.xml?channel_id=`，所以
-`gx youtube get channel` 的 JSON 帶 `rss`，`--rss` 只印那條網址。
+`gx youtube get channel` 的輸出帶 `rss`。
 
 Bilibili 的 UP 主空間沒有對等的官方 feed（舊的分區 `/rss-N.xml` 已下線）。
 生態裡看得到的「B 站 RSS」是 RSSHub 等第三方打簽名 JSON API 再包成 XML。
 那些網址不是來源站的公開頁、公共實例也不穩定，因此
-`gx bilibili get channel` 只回 UID 與空間網址，JSON **沒有** `rss` 欄位。
+`gx bilibili get channel` 只回 UID 與空間網址，輸出**沒有** `rss` 欄位。
 
 ### 頻道 ID 一律在上下文中比對，不比對 ID 形狀
 

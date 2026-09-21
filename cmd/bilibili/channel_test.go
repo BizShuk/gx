@@ -10,9 +10,7 @@ const testSpaceID = "2267573"
 
 func executeCmd(args []string, in string) (string, error) {
 	channelAsJSON = false
-	channelIDOnly = false
 	_ = channelCmd.Flags().Set("json", "false")
-	_ = channelCmd.Flags().Set("id", "false")
 
 	var out bytes.Buffer
 	Cmd.SetOut(&out)
@@ -26,15 +24,17 @@ func executeCmd(args []string, in string) (string, error) {
 	return out.String(), err
 }
 
-func TestChannelCmd_SingleArg(t *testing.T) {
-	got, err := executeCmd([]string{testSpaceID}, "")
+const wantLines = "platform: bilibili\n" +
+	"id: " + testSpaceID + "\n" +
+	"url: https://space.bilibili.com/" + testSpaceID + "\n"
+
+func TestChannelCmd_SingleArgLines(t *testing.T) {
+	got, err := executeCmd([]string{"https://space.bilibili.com/" + testSpaceID + "/video"}, "")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
-
-	want := "https://space.bilibili.com/" + testSpaceID + "\n"
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
+	if got != wantLines {
+		t.Errorf("got %q, want %q", got, wantLines)
 	}
 }
 
@@ -44,36 +44,17 @@ func TestChannelCmd_SingleArgJSON(t *testing.T) {
 		t.Fatalf("Execute() error: %v", err)
 	}
 
+	if !strings.HasPrefix(strings.TrimSpace(got), "[") {
+		t.Errorf("expected JSON array output, got: %s", got)
+	}
 	if !strings.Contains(got, `"id": "`+testSpaceID+`"`) {
 		t.Errorf("JSON output does not contain expected uid: %s", got)
 	}
+	if !strings.Contains(got, `"platform": "bilibili"`) {
+		t.Errorf("JSON output does not contain platform: %s", got)
+	}
 	if strings.Contains(got, `"rss"`) {
 		t.Errorf("JSON output must not invent an RSS field: %s", got)
-	}
-}
-
-func TestChannelCmd_IDFlag(t *testing.T) {
-	got, err := executeCmd([]string{"https://space.bilibili.com/" + testSpaceID + "/video", "--id"}, "")
-	if err != nil {
-		t.Fatalf("Execute() error: %v", err)
-	}
-
-	want := testSpaceID + "\n"
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
-func TestChannelCmd_MultipleArgs(t *testing.T) {
-	got, err := executeCmd([]string{testSpaceID, testSpaceID}, "")
-	if err != nil {
-		t.Fatalf("Execute() error: %v", err)
-	}
-
-	url := "https://space.bilibili.com/" + testSpaceID
-	want := url + "\n" + url + "\n"
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
@@ -82,10 +63,7 @@ func TestChannelCmd_Stdin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
-
-	url := "https://space.bilibili.com/" + testSpaceID
-	want := url + "\n" + url + "\n"
-	if got != want {
+	if want := wantLines + "\n" + wantLines; got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
 }

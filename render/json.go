@@ -7,6 +7,7 @@ import (
 )
 
 // JSON 以縮排 JSON 輸出任意結果，供各子命令的 --json 旗標共用。
+// 多筆查詢一律傳 slice：單筆與多筆輸出同一種形狀，呼叫端不必猜。
 func JSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")

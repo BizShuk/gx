@@ -38,10 +38,12 @@ func TestGetChannelResolvesHandle(t *testing.T) {
 	}
 }
 
-// 輸入已經是頻道 ID 時不該發出任何請求。
-func TestGetChannelSkipsFetchForChannelID(t *testing.T) {
+// 輸入已經是頻道 ID 時直接抓 /channel/<id> 取名稱，ID 以輸入為準。
+func TestGetChannelFetchesTitleForChannelID(t *testing.T) {
+	var gotPath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Errorf("unexpected request to %s", r.URL.Path)
+		gotPath = r.URL.Path
+		w.Write([]byte(`<meta property="og:title" content="游庭皓的財經皓角">`))
 	}))
 	defer srv.Close()
 
@@ -49,11 +51,30 @@ func TestGetChannelSkipsFetchForChannelID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetChannel() returned error: %v", err)
 	}
+	if want := "/channel/" + testChannelID; gotPath != want {
+		t.Errorf("requested path = %q, want %q", gotPath, want)
+	}
 	if channel.ID != testChannelID {
 		t.Errorf("channel.ID = %q, want %q", channel.ID, testChannelID)
 	}
-	if want := srv.URL + "/feeds/videos.xml?channel_id=" + testChannelID; channel.RSS != want {
-		t.Errorf("channel.RSS = %q, want %q", channel.RSS, want)
+	if channel.Title != "游庭皓的財經皓角" {
+		t.Errorf("channel.Title = %q, want %q", channel.Title, "游庭皓的財經皓角")
+	}
+}
+
+// 頁面沒有名稱時仍回傳 ID：名稱是顯示欄位，不是解析成功的條件。
+func TestGetChannelToleratesMissingTitle(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<link rel="canonical" href="https://www.youtube.com/channel/` + testChannelID + `">`))
+	}))
+	defer srv.Close()
+
+	channel, err := NewClient(WithBaseURL(srv.URL)).GetChannel(context.Background(), "@YouTube")
+	if err != nil {
+		t.Fatalf("GetChannel() returned error: %v", err)
+	}
+	if channel.Title != "" {
+		t.Errorf("channel.Title = %q, want empty", channel.Title)
 	}
 }
 

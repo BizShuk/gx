@@ -7,6 +7,9 @@
 | `domain`   | 資料來源領域，命令樹第一段，對應 `cmd/<domain>/` 與 `svc/<domain>/`。目前有 `youtube`、`bilibili`。 |
 | `verb`     | 動作，命令樹第二段。目前只有 `get`（唯讀查詢）。                     |
 | `resource` | 目標資源，命令樹第三段，實際發出請求並輸出結果的葉命令。             |
+| `Channel`  | 所有平台 `get channel` 共用的標準輸出物件：`platform`、`id`、`handle`、`title`、`url`、`rss`，平台沒有的欄位省略。 |
+| 逐行輸出   | 未帶 `--json` 時的預設呈現：每行一個 `key: value`，多筆之間空一行。 |
+| `--json`   | 一律輸出 `Channel` 陣列，單筆也是陣列。                              |
 
 ## YouTube 領域
 
@@ -14,7 +17,7 @@
 | ------------------- | -------------------------------------------------------------------------------- |
 | handle              | YouTube 頻道的人類可讀名稱，以 `@` 開頭，如 `@YouTube`。本專案一律正規化成含 `@`。 |
 | channel ID          | 頻道的機器識別碼，`UC` 開頭加 22 個 base64url 字元，如 `UCBR8-60-B28hp2BmDPdntcQ`。 |
-| canonical URL       | 由 channel ID 組成的正規頻道網址 `<base>/channel/<id>`，本工具的預設輸出。        |
+| canonical URL       | 由 channel ID 組成的正規頻道網址 `<base>/channel/<id>`，輸出的 `url` 欄位。         |
 | official RSS        | YouTube 平台自己發的頻道 feed：`<base>/feeds/videos.xml?channel_id=<id>`。        |
 | `Target`            | `svc/youtube` 對輸入的解析結果：帶 ID 時填 `ID`，否則填 `Handle`。               |
 | lookalike token     | 頁面中與 channel ID 同形狀但意義不同的隨機字串（visitor data 等），必須排除。     |

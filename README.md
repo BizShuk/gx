@@ -28,30 +28,31 @@ YouTube 的 `@handle` 換成 `UCxxx` 頻道 ID 就是典型例子。這類查詢
 
 ### youtube get channel
 
-把頻道的任意寫法解析成正規的 channel ID 與網址。
+把頻道的任意寫法解析成頻道 ID、名稱、正規網址與官方 RSS。
+預設每行一個 `key: value`、多筆之間空一行；`--json` 一律輸出陣列。
 
 ```bash
 gx youtube get channel @YouTube
-# https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ
-
-gx youtube get channel @YouTube @NASA
-# https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ
-# https://www.youtube.com/channel/UC2wK54dY22Z16-aG6Z3Ld-g
-
-cat handles.txt | gx youtube get channel --id
-# UCBR8-60-B28hp2BmDPdntcQ
-# UC2wK54dY22Z16-aG6Z3Ld-g
+# platform: youtube
+# id: UCBR8-60-B28hp2BmDPdntcQ
+# handle: @YouTube
+# title: YouTube
+# url: https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ
+# rss: https://www.youtube.com/feeds/videos.xml?channel_id=UCBR8-60-B28hp2BmDPdntcQ
 
 gx youtube get channel https://www.youtube.com/@YouTube/videos --json
-# {
-#   "handle": "@YouTube",
-#   "id": "UCBR8-60-B28hp2BmDPdntcQ",
-#   "url": "https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ",
-#   "rss": "https://www.youtube.com/feeds/videos.xml?channel_id=UCBR8-60-B28hp2BmDPdntcQ"
-# }
+# [
+#   {
+#     "platform": "youtube",
+#     "id": "UCBR8-60-B28hp2BmDPdntcQ",
+#     "handle": "@YouTube",
+#     "title": "YouTube",
+#     "url": "https://www.youtube.com/channel/UCBR8-60-B28hp2BmDPdntcQ",
+#     "rss": "https://www.youtube.com/feeds/videos.xml?channel_id=UCBR8-60-B28hp2BmDPdntcQ"
+#   }
+# ]
 
-gx youtube get channel @YouTube --rss
-# https://www.youtube.com/feeds/videos.xml?channel_id=UCBR8-60-B28hp2BmDPdntcQ
+cat handles.txt | gx youtube get channel --json | jq -r '.[].id'
 ```
 
 接受的輸入寫法：
@@ -59,10 +60,10 @@ gx youtube get channel @YouTube --rss
 - `@YouTube`、`YouTube`
 - `https://www.youtube.com/@YouTube`（含 `/videos` 等子頁與 `?si=` 追蹤參數）
 - `youtube.com/c/YouTube`、`youtube.com/user/YouTube`
-- `https://www.youtube.com/channel/UCxxx`、`UCxxx`（已含 ID 時不發請求）
+- `https://www.youtube.com/channel/UCxxx`、`UCxxx`（已含 ID 時仍抓頁面取名稱）
 
 流程：正規化輸入 → 取得頻道頁 HTML → 在 canonical link / `channelId` 欄位的上下文中
-比對 ID → 組出正規網址與官方 RSS（`/feeds/videos.xml?channel_id=`）。找不到頻道時以
+比對 ID、取出頻道名稱 → 組出正規網址與官方 RSS（`/feeds/videos.xml?channel_id=`）。找不到頻道時以
 `channel @xxx not found` 結束，離開碼 1。
 
 ### bilibili get channel
@@ -71,17 +72,19 @@ gx youtube get channel @YouTube --rss
 本命令不輸出 feed、也不代填 RSSHub 等第三方合成源。
 
 ```bash
-gx bilibili get channel 2267573
-# https://space.bilibili.com/2267573
-
-gx bilibili get channel https://space.bilibili.com/2267573/video --id
-# 2267573
+gx bilibili get channel https://space.bilibili.com/2267573/video
+# platform: bilibili
+# id: 2267573
+# url: https://space.bilibili.com/2267573
 
 gx bilibili get channel 2267573 --json
-# {
-#   "id": "2267573",
-#   "url": "https://space.bilibili.com/2267573"
-# }
+# [
+#   {
+#     "platform": "bilibili",
+#     "id": "2267573",
+#     "url": "https://space.bilibili.com/2267573"
+#   }
+# ]
 ```
 
 接受的輸入寫法：

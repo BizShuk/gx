@@ -136,3 +136,26 @@ func TestExtractChannelIDIgnoresLookalikeTokens(t *testing.T) {
 		t.Error("ExtractChannelID() matched a token outside any channel context")
 	}
 }
+
+func TestExtractChannelTitle(t *testing.T) {
+	tests := []struct {
+		name string
+		html string
+		want string
+		ok   bool
+	}{
+		{"og title unescaped", `<meta property="og:title" content="A &amp; B">`, "A & B", true},
+		{"metadata renderer json", `"channelMetadataRenderer":{"title":"財經 \"皓角\"","description":""}`, `財經 "皓角"`, true},
+		{"og preferred", `<meta property="og:title" content="OG">"channelMetadataRenderer":{"title":"JSON"}`, "OG", true},
+		{"blank og falls back", `<meta property="og:title" content=" ">"channelMetadataRenderer":{"title":"JSON"}`, "JSON", true},
+		{"none", `<html></html>`, "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := ExtractChannelTitle(tt.html)
+			if got != tt.want || ok != tt.ok {
+				t.Errorf("ExtractChannelTitle() = (%q, %v), want (%q, %v)", got, ok, tt.want, tt.ok)
+			}
+		})
+	}
+}

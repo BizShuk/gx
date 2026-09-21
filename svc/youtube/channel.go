@@ -4,50 +4,49 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"github.com/bizshuk/gx/model"
 )
 
-// Channel 是一個 YouTube 頻道的識別資訊。
-type Channel struct {
-	Handle string `json:"handle,omitempty"`
-	ID     string `json:"id"`
-	URL    string `json:"url"`
-	RSS    string `json:"rss"`
-}
-
-// GetChannel 由 handle 或網址解析出頻道 ID、正規網址與官方 RSS。
-// 輸入本身已帶頻道 ID 時直接組出結果，不發出請求。
-func (c *Client) GetChannel(ctx context.Context, input string) (*Channel, error) {
+// GetChannel 由 handle、網址或頻道 ID 解析出頻道 ID、名稱、正規網址與官方 RSS。
+//
+// 輸入已帶頻道 ID 時仍會抓一次頻道頁：名稱只在頁面上，
+// 而官方 RSS 會陣發性地整段 404，不能拿來當名稱的來源。
+func (c *Client) GetChannel(ctx context.Context, input string) (*model.Channel, error) {
 	target, err := ParseTarget(input)
 	if err != nil {
 		return nil, err
 	}
-	if target.ID != "" {
-		return c.newChannel("", target.ID), nil
-	}
 
-	html, err := c.fetch(ctx, fmt.Sprintf("%s/%s", c.baseURL, target.Handle))
+	page := target.Handle
+	if target.ID != "" {
+		page = "channel/" + target.ID
+	}
+	html, err := c.fetch(ctx, fmt.Sprintf("%s/%s", c.baseURL, page))
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return nil, fmt.Errorf("channel %s not found", target.Handle)
+			return nil, fmt.Errorf("channel %s not found", input)
 		}
 		return nil, err
 	}
 
-	id, ok := ExtractChannelID(html)
-	if !ok {
-		return nil, fmt.Errorf("no channel id found for %s", target.Handle)
+	id := target.ID
+	if id == "" {
+		var ok bool
+		if id, ok = ExtractChannelID(html); !ok {
+			return nil, fmt.Errorf("no channel id found for %s", target.Handle)
+		}
 	}
 
-	return c.newChannel(target.Handle, id), nil
-}
-
-func (c *Client) newChannel(handle, id string) *Channel {
-	return &Channel{
-		Handle: handle,
-		ID:     id,
-		URL:    c.channelURL(id),
-		RSS:    c.rssURL(id),
-	}
+	title, _ := ExtractChannelTitle(html)
+	return &model.Channel{
+		Platform: model.PLATFORM_YOUTUBE,
+		ID:       id,
+		Handle:   target.Handle,
+		Title:    title,
+		URL:      c.channelURL(id),
+		RSS:      c.rssURL(id),
+	}, nil
 }
 
 func (c *Client) channelURL(id string) string {

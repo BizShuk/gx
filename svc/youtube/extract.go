@@ -1,6 +1,11 @@
 package youtube
 
-import "regexp"
+import (
+	"encoding/json"
+	"html"
+	"regexp"
+	"strings"
+)
 
 // channelIDPattern 匹配頻道 ID 本身：UC 開頭加 22 個 base64url 字元。
 var channelIDPattern = regexp.MustCompile(`^UC[A-Za-z0-9_-]{22}$`)
@@ -22,6 +27,31 @@ func ExtractChannelID(html string) (string, bool) {
 	for _, pattern := range channelIDInPage {
 		if match := pattern.FindStringSubmatch(html); match != nil {
 			return match[1], true
+		}
+	}
+	return "", false
+}
+
+// channelTitleInPage 依可靠度排序的頻道名稱比對規則。
+// og:title 是 HTML 屬性（需 HTML unescape），channelMetadataRenderer 是 JSON 字串。
+var (
+	ogTitleInPage       = regexp.MustCompile(`<meta\s+property="og:title"\s+content="([^"]*)"`)
+	metadataTitleInPage = regexp.MustCompile(`"channelMetadataRenderer"\s*:\s*\{\s*"title"\s*:\s*("(?:[^"\\]|\\.)*")`)
+)
+
+// ExtractChannelTitle 從頻道頁 HTML 取出頻道名稱。
+func ExtractChannelTitle(page string) (string, bool) {
+	if match := ogTitleInPage.FindStringSubmatch(page); match != nil {
+		if title := strings.TrimSpace(html.UnescapeString(match[1])); title != "" {
+			return title, true
+		}
+	}
+	if match := metadataTitleInPage.FindStringSubmatch(page); match != nil {
+		var title string
+		if json.Unmarshal([]byte(match[1]), &title) == nil {
+			if title = strings.TrimSpace(title); title != "" {
+				return title, true
+			}
 		}
 	}
 	return "", false
