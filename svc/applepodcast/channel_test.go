@@ -45,7 +45,7 @@ func TestGetChannelEmptyResultIsNotFound(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if _, err := NewClient(WithBaseURL(srv.URL)).GetChannel(context.Background(), testCollectionID); err == nil {
+	if _, err := NewClient(WithBaseURL(srv.URL)).GetChannel(context.Background(), "https://podcasts.apple.com/podcast/id"+testCollectionID); err == nil {
 		t.Fatal("GetChannel() = nil error, want not found")
 	}
 }

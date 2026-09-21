@@ -39,11 +39,18 @@ func ParseTarget(input string) (Target, error) {
 	}
 
 	segments := splitPath(s)
-	if len(segments) > 0 && isYouTubeHost(segments[0]) {
+	if len(segments) > 0 && IsHost(segments[0]) {
+		if strings.EqualFold(segments[0], "youtu.be") {
+			return Target{}, fmt.Errorf("video short link is not a channel: %q", input)
+		}
 		segments = segments[1:]
 	}
 	if len(segments) == 0 {
 		return Target{}, fmt.Errorf("no channel handle in %q", input)
+	}
+	// 影片與播放清單的路徑不是頻道；不擋的話 `/playlist` 會被當成 handle `@playlist`。
+	if nonChannelPaths[strings.ToLower(segments[0])] {
+		return Target{}, fmt.Errorf("not a channel url: %q", input)
 	}
 
 	for i, segment := range segments {
@@ -87,8 +94,13 @@ func splitPath(s string) []string {
 	return segments
 }
 
-// isYouTubeHost 判斷路徑第一段是否為 YouTube 網域，是的話該段不是 handle。
-func isYouTubeHost(segment string) bool {
+// nonChannelPaths 是 YouTube 網址中指向影片或播放清單、而非頻道的第一段路徑。
+var nonChannelPaths = map[string]bool{
+	"watch": true, "shorts": true, "live": true, "embed": true, "playlist": true,
+}
+
+// IsHost 判斷 host 是否為 YouTube 網域。
+func IsHost(segment string) bool {
 	host := strings.ToLower(segment)
 	return host == "youtu.be" ||
 		host == "youtube.com" ||

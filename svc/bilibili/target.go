@@ -34,7 +34,7 @@ func ParseTarget(input string) (Target, error) {
 	}
 
 	segments := splitPath(s)
-	if len(segments) > 0 && isBilibiliHost(segments[0]) {
+	if len(segments) > 0 && IsHost(segments[0]) {
 		host := strings.ToLower(segments[0])
 		segments = segments[1:]
 		if host == "b23.tv" || host == "b23.wtf" {
@@ -82,7 +82,8 @@ func splitPath(s string) []string {
 	return segments
 }
 
-func isBilibiliHost(segment string) bool {
+// IsHost 判斷 host 是否為 Bilibili 網域（含 b23 短鏈網域）。
+func IsHost(segment string) bool {
 	host := strings.ToLower(segment)
 	return host == "b23.tv" ||
 		host == "b23.wtf" ||

@@ -9,9 +9,7 @@ func TestParseTargetCollectionID(t *testing.T) {
 		name  string
 		input string
 	}{
-		{"bare id", testCollectionID},
-		{"padded id", "  " + testCollectionID + "  "},
-		{"id prefix", "id" + testCollectionID},
+		{"padded url", "  https://podcasts.apple.com/podcast/id" + testCollectionID + "  "},
 		{"show url", "https://podcasts.apple.com/tw/podcast/%E7%A7%91%E6%8A%80%E6%B5%AA-tech-wav/id" + testCollectionID + "?l=en-GB"},
 		{"no region", "https://podcasts.apple.com/podcast/id" + testCollectionID},
 		{"episode url", "https://podcasts.apple.com/us/podcast/x/id" + testCollectionID + "?i=1000712345678"},
@@ -37,6 +35,8 @@ func TestParseTargetRejectsUnusableInput(t *testing.T) {
 		"",
 		"   ",
 		"0123",
+		testCollectionID,
+		"id" + testCollectionID,
 		"@YouTube",
 		"https://www.youtube.com/@YouTube",
 		"https://podcasts.apple.com/us/podcast/no-id",

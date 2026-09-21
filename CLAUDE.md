@@ -13,6 +13,7 @@ gx/
 │   │   ├── get.go               # getCmd：讀取類動作
 │   │   └── channel.go           # channelCmd：--json 旗標，流程交給 lookup
 │   ├── bilibili/                # bilibili 領域命令樹（結構同 youtube）
+│   ├── get/                     # gx get channel：省略 domain，由網址網域分派
 │   ├── applepodcast/            # apple-podcast 領域命令樹（結構同 youtube）
 │   └── lookup/
 │       └── lookup.go            # 各平台 get channel 共用流程：讀目標、查詢、輸出
@@ -30,10 +31,11 @@ gx/
 │   │   ├── option.go            # 函式選項 + viper key
 │   │   ├── target.go            # ParseTarget()：UID / 空間網址
 │   │   └── channel.go           # GetChannel()；無 rss、無名稱
+│   ├── resolve/                 # 跨平台分派：Platform() 依網域判平台、Resolver.Channel() 分派查詢
 │   └── applepodcast/
 │       ├── client.go            # Client、fetch()、DEFAULT_BASE_URL（iTunes lookup）
 │       ├── option.go            # 函式選項 + viper key
-│       ├── target.go            # ParseTarget()：collection ID / 節目網址
+│       ├── target.go            # ParseTarget()：只收 Apple 網域的節目網址
 │       └── channel.go           # GetChannel()：lookup → 名稱、正規網址、feedUrl
 ├── model/
 │   └── channel.go               # 各平台共用的標準輸出物件 Channel
@@ -101,6 +103,19 @@ Bilibili 的 UP 主空間沒有對等的官方 feed（舊的分區 `/rss-N.xml` 
 生態裡看得到的「B 站 RSS」是 RSSHub 等第三方打簽名 JSON API 再包成 XML。
 那些網址不是來源站的公開頁、公共實例也不穩定，因此
 `gx bilibili get channel` 只回 UID 與空間網址，輸出**沒有** `rss` 欄位。
+
+### 通用解析只看網址網域，也是對外函式庫
+
+`svc/resolve` 依 host 分派，各平台的網域判斷由 `svc/<platform>.IsHost` 單一擁有，
+resolve 只排順序。裸 ID 與 `@handle` 一律回 `ErrUnknownURL` —— 一串數字說不出平台，
+猜錯的代價是把別家的 ID 送去錯的查詢端點。
+
+它同時是 vid-note 等服務的函式庫入口（取代 exec `gx`）。svc 的 `applyOptions`
+會讀全域 viper 的扁平 key（`http_timeout` 等），宿主若有同名 key 就會被讀到，
+因此函式庫呼叫端一律以 `With*` 選項明確帶值。
+
+YouTube 的 `ParseTarget` 擋掉 `/watch`、`/shorts`、`/live`、`/embed`、`/playlist` 與 `youtu.be`：
+通用入口會把任何 YouTube 網址送進來，不擋的話 `/playlist` 會變成假 handle `@playlist`。
 
 ### Apple Podcasts 走 iTunes lookup，不爬節目頁
 

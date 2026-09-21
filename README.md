@@ -24,6 +24,25 @@ YouTube 的 `@handle` 換成 `UCxxx` 頻道 ID 就是典型例子。這類查詢
 | `verb`     | 動作           | `get`                    |
 | `resource` | 目標資源       | `channel`                |
 
+省略 domain 的 `gx get channel <url>` 由網址網域自動判斷平台，輸出與各平台命令相同，
+同一批可混合不同平台。只接受網址：`@handle`、裸 ID 說不出平台，請改用對應平台的命令。
+
+```bash
+gx get channel https://www.youtube.com/@YouTube https://space.bilibili.com/2267573 --json
+```
+
+## 函式庫 (Library)
+
+其他 Go 服務以 `github.com/bizshuk/gx/svc/resolve` 直接取用同一套解析，不必 exec 執行檔：
+
+```go
+resolve.Platform(url)                        // 依網域判斷平台，認不得回 ""
+resolve.New(opts...).Channel(ctx, url)       // 分派給對應平台，回 *model.Channel
+```
+
+各平台 client（`svc/youtube`、`svc/bilibili`、`svc/applepodcast`）也可單獨使用；
+呼叫端應以 `WithBaseURL` / `WithTimeout` 明確帶入設定，否則會讀到宿主 viper 的同名扁平 key。
+
 ## 領域流程 (Domain Flow)
 
 ### youtube get channel
@@ -62,6 +81,8 @@ cat handles.txt | gx youtube get channel --json | jq -r '.[].id'
 - `youtube.com/c/YouTube`、`youtube.com/user/YouTube`
 - `https://www.youtube.com/channel/UCxxx`、`UCxxx`（已含 ID 時仍抓頁面取名稱）
 
+影片、Shorts、直播、播放清單網址與 `youtu.be` 短鏈不是頻道，以錯誤結束。
+
 流程：正規化輸入 → 取得頻道頁 HTML → 在 canonical link / `channelId` 欄位的上下文中
 比對 ID、取出頻道名稱 → 組出正規網址與官方 RSS（`/feeds/videos.xml?channel_id=`）。找不到頻道時以
 `channel @xxx not found` 結束，離開碼 1。
@@ -97,7 +118,7 @@ UID 已在輸入裡時不發請求。單支影片網址、暱稱、`b23.tv` 短�
 
 ### apple-podcast get channel
 
-把 Apple Podcasts 節目的 collection ID 或網址解析成節目 ID、名稱、正規網址與 RSS。
+把 Apple Podcasts 節目網址解析成節目 ID、名稱、正規網址與 RSS。
 經 iTunes lookup 查詢，不需要 API key。`rss` 是節目發佈者自己的 feed（lookup 的 `feedUrl`），
 地位等同 YouTube 的官方 RSS。
 
@@ -109,14 +130,16 @@ gx apple-podcast get channel 'https://podcasts.apple.com/tw/podcast/xxx/id170240
 # url: https://podcasts.apple.com/podcast/id1702409419
 # rss: https://feed.firstory.me/rss/user/cm3o5681s06e801v3fxpjehwb
 
-gx apple-podcast get channel 1702409419 --json
+gx apple-podcast get channel 'https://podcasts.apple.com/podcast/id1702409419' --json
 ```
 
 接受的輸入寫法：
 
-- `1702409419`、`id1702409419`
 - `https://podcasts.apple.com/<地區>/podcast/<slug>/id1702409419`（含 `?l=`、單集 `?i=` 參數）
 - `https://itunes.apple.com/us/podcast/id1702409419`
+
+只收 Apple 網域的網址。裸 collection ID（`1702409419`、`id1702409419`）以錯誤結束 ——
+一串數字說不出它屬於哪個平台。
 
 `url` 一律組成不帶地區與 slug 的 `https://podcasts.apple.com/podcast/id<id>`，由 Apple 依瀏覽者地區導向。
 lookup 對不存在的 ID 回 200 加空結果，本命令將其視為 `podcast xxx not found`，離開碼 1。

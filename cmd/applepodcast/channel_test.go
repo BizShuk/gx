@@ -51,8 +51,10 @@ func TestChannelCmd_SingleArgLines(t *testing.T) {
 	}
 }
 
+const testShowURL = "https://podcasts.apple.com/podcast/id" + testCollectionID
+
 func TestChannelCmd_JSONIsArray(t *testing.T) {
-	got, err := executeCmd(t, []string{testCollectionID, "--json"}, "")
+	got, err := executeCmd(t, []string{testShowURL, "--json"}, "")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
@@ -62,7 +64,7 @@ func TestChannelCmd_JSONIsArray(t *testing.T) {
 }
 
 func TestChannelCmd_Stdin(t *testing.T) {
-	got, err := executeCmd(t, nil, testCollectionID+"\nid"+testCollectionID+"\n")
+	got, err := executeCmd(t, nil, testShowURL+"\nhttps://itunes.apple.com/us/podcast/id"+testCollectionID+"\n")
 	if err != nil {
 		t.Fatalf("Execute() error: %v", err)
 	}
@@ -74,5 +76,11 @@ func TestChannelCmd_Stdin(t *testing.T) {
 func TestChannelCmd_RejectsNonAppleURL(t *testing.T) {
 	if _, err := executeCmd(t, []string{"https://open.spotify.com/show/abc"}, ""); err == nil {
 		t.Fatal("expected error for non-Apple url, got nil")
+	}
+}
+
+func TestChannelCmd_RejectsBareID(t *testing.T) {
+	if _, err := executeCmd(t, []string{testCollectionID}, ""); err == nil {
+		t.Fatal("expected error for bare collection id, got nil")
 	}
 }

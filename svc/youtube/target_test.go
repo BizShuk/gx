@@ -159,3 +159,20 @@ func TestExtractChannelTitle(t *testing.T) {
 		})
 	}
 }
+
+// 影片與播放清單網址不是頻道：擋掉才不會被當成 `@playlist` 這種假 handle。
+func TestParseTargetRejectsNonChannelURLs(t *testing.T) {
+	inputs := []string{
+		"https://www.youtube.com/playlist?list=PLrAXtmRdnEQy6nuLMHjMZOz59Oq8HmL5B",
+		"https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		"https://www.youtube.com/shorts/abcdefghijk",
+		"https://www.youtube.com/live/abcdefghijk",
+		"https://www.youtube.com/embed/dQw4w9WgXcQ",
+		"https://youtu.be/dQw4w9WgXcQ",
+	}
+	for _, input := range inputs {
+		if got, err := ParseTarget(input); err == nil {
+			t.Errorf("ParseTarget(%q) = %+v, nil error; want error", input, got)
+		}
+	}
+}

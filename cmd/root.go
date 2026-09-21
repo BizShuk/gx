@@ -8,6 +8,7 @@ import (
 	gosdkcmd "github.com/bizshuk/gosdk/cmd"
 	"github.com/bizshuk/gx/cmd/applepodcast"
 	"github.com/bizshuk/gx/cmd/bilibili"
+	"github.com/bizshuk/gx/cmd/get"
 	"github.com/bizshuk/gx/cmd/youtube"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,8 @@ var RootCmd = &cobra.Command{
 	Long: `gx 是一組通用擷取子命令的集合。
 
 命令採 <domain> <verb> <resource> 三段式，新增領域時只要在 cmd/ 下
-新增一個領域套件並掛到 RootCmd 即可。`,
+新增一個領域套件並掛到 RootCmd 即可。
+gx get channel <url> 省略 domain，由網址網域自動判斷平台。`,
 	// 錯誤一律由 Execute 統一輸出到 stderr，避免 cobra 再印一次。
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -34,5 +36,5 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.AddCommand(gosdkcmd.ConfigCmd, youtube.Cmd, bilibili.Cmd, applepodcast.Cmd)
+	RootCmd.AddCommand(gosdkcmd.ConfigCmd, youtube.Cmd, bilibili.Cmd, applepodcast.Cmd, get.Cmd)
 }

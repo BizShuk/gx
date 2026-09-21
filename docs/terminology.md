@@ -8,6 +8,8 @@
 | `verb`     | 動作，命令樹第二段。目前只有 `get`（唯讀查詢）。                     |
 | `resource` | 目標資源，命令樹第三段，實際發出請求並輸出結果的葉命令。             |
 | `Channel`  | 所有平台 `get channel` 共用的標準輸出物件：`platform`、`id`、`handle`、`title`、`url`、`rss`，平台沒有的欄位省略。 |
+| `resolve`  | 跨平台分派層：依網址網域判斷平台（`Platform`）並交給該平台解析（`Resolver.Channel`），也是對外的 Go 函式庫入口。 |
+| 省略 domain | `gx get channel <url>`：domain 由網址網域決定，只接受網址。 |
 | 逐行輸出   | 未帶 `--json` 時的預設呈現：每行一個 `key: value`，多筆之間空一行。 |
 | `--json`   | 一律輸出 `Channel` 陣列，單筆也是陣列。                              |
 
