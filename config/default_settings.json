@@ -3,5 +3,6 @@
   "http_timeout": "10s",
   "http_user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
   "youtube_base_url": "https://www.youtube.com",
-  "bilibili_base_url": "https://space.bilibili.com"
+  "bilibili_base_url": "https://space.bilibili.com",
+  "apple_podcast_base_url": "https://itunes.apple.com"
 }

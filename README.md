@@ -20,7 +20,7 @@ YouTube 的 `@handle` 換成 `UCxxx` 頻道 ID 就是典型例子。這類查詢
 
 | 段落       | 意義           | 範例                     |
 | ---------- | -------------- | ------------------------ |
-| `domain`   | 資料來源領域   | `youtube`、`bilibili`    |
+| `domain`   | 資料來源領域   | `youtube`、`bilibili`、`apple-podcast` |
 | `verb`     | 動作           | `get`                    |
 | `resource` | 目標資源       | `channel`                |
 
@@ -95,6 +95,32 @@ gx bilibili get channel 2267573 --json
 
 UID 已在輸入裡時不發請求。單支影片網址、暱稱、`b23.tv` 短鏈不是空間識別碼，以錯誤結束。
 
+### apple-podcast get channel
+
+把 Apple Podcasts 節目的 collection ID 或網址解析成節目 ID、名稱、正規網址與 RSS。
+經 iTunes lookup 查詢，不需要 API key。`rss` 是節目發佈者自己的 feed（lookup 的 `feedUrl`），
+地位等同 YouTube 的官方 RSS。
+
+```bash
+gx apple-podcast get channel 'https://podcasts.apple.com/tw/podcast/xxx/id1702409419?l=en-GB'
+# platform: apple-podcast
+# id: 1702409419
+# title: 科技浪 Tech.wav
+# url: https://podcasts.apple.com/podcast/id1702409419
+# rss: https://feed.firstory.me/rss/user/cm3o5681s06e801v3fxpjehwb
+
+gx apple-podcast get channel 1702409419 --json
+```
+
+接受的輸入寫法：
+
+- `1702409419`、`id1702409419`
+- `https://podcasts.apple.com/<地區>/podcast/<slug>/id1702409419`（含 `?l=`、單集 `?i=` 參數）
+- `https://itunes.apple.com/us/podcast/id1702409419`
+
+`url` 一律組成不帶地區與 slug 的 `https://podcasts.apple.com/podcast/id<id>`，由 Apple 依瀏覽者地區導向。
+lookup 對不存在的 ID 回 200 加空結果，本命令將其視為 `podcast xxx not found`，離開碼 1。
+
 ## 設定 (Configuration)
 
 設定檔位於 `~/.config/gx/settings.json`，首次執行自動建立。
@@ -106,6 +132,7 @@ UID 已在輸入裡時不發請求。單支影片網址、暱稱、`b23.tv` 短�
 | `http_user_agent`  | 桌面版 Chrome UA           | 避免拿到精簡版頁面         |
 | `youtube_base_url` | `https://www.youtube.com`  | YouTube 頁面來源網域       |
 | `bilibili_base_url` | `https://space.bilibili.com` | Bilibili 空間頁來源網域 |
+| `apple_podcast_base_url` | `https://itunes.apple.com` | iTunes lookup 來源網域 |
 
 檢視與修改：`gx config`（由 gosdk 提供）。
 

@@ -4,7 +4,7 @@
 
 | 術語       | 定義                                                                 |
 | ---------- | -------------------------------------------------------------------- |
-| `domain`   | 資料來源領域，命令樹第一段，對應 `cmd/<domain>/` 與 `svc/<domain>/`。目前有 `youtube`、`bilibili`。 |
+| `domain`   | 資料來源領域，命令樹第一段，對應 `cmd/<domain>/` 與 `svc/<domain>/`。目前有 `youtube`、`bilibili`、`apple-podcast`。 |
 | `verb`     | 動作，命令樹第二段。目前只有 `get`（唯讀查詢）。                     |
 | `resource` | 目標資源，命令樹第三段，實際發出請求並輸出結果的葉命令。             |
 | `Channel`  | 所有平台 `get channel` 共用的標準輸出物件：`platform`、`id`、`handle`、`title`、`url`、`rss`，平台沒有的欄位省略。 |
@@ -30,6 +30,16 @@
 | space URL     | 由 UID 組成的正規空間網址 `<base>/<uid>`，預設 `https://space.bilibili.com/<uid>`。           |
 | `channel`     | 命令樹的 resource 名，與 youtube 對齊；在本領域對應的是 UP 主空間，不是合集或單支影片。       |
 | official RSS  | 不存在。Bilibili 不為空間提供 feed；第三方合成源（RSSHub 等）不是本工具的輸出。               |
+
+## Apple Podcasts 領域
+
+| 術語            | 定義                                                                                   |
+| --------------- | -------------------------------------------------------------------------------------- |
+| collection ID   | 節目的機器識別碼，十進位數字，對應網址路徑上的 `id<數字>` 段，如 `1702409419`。          |
+| iTunes lookup   | Apple 的公開 JSON 查詢端點 `<base>/lookup?id=<id>&entity=podcast`，不需要 API key。      |
+| show URL        | 正規節目頁 `https://podcasts.apple.com/podcast/id<id>`，輸出的 `url` 欄位。             |
+| feed URL        | lookup 回傳的 `feedUrl`，節目發佈者自己的 RSS，輸出的 `rss` 欄位。                      |
+| `channel`       | 命令樹的 resource 名，與 youtube 對齊；在本領域對應的是節目 (show)，不是單集。          |
 
 ## 設定
 

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	gosdkcmd "github.com/bizshuk/gosdk/cmd"
+	"github.com/bizshuk/gx/cmd/applepodcast"
 	"github.com/bizshuk/gx/cmd/bilibili"
 	"github.com/bizshuk/gx/cmd/youtube"
 	"github.com/spf13/cobra"
@@ -33,5 +34,5 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.AddCommand(gosdkcmd.ConfigCmd, youtube.Cmd, bilibili.Cmd)
+	RootCmd.AddCommand(gosdkcmd.ConfigCmd, youtube.Cmd, bilibili.Cmd, applepodcast.Cmd)
 }

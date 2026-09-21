@@ -13,6 +13,7 @@ gx/
 │   │   ├── get.go               # getCmd：讀取類動作
 │   │   └── channel.go           # channelCmd：--json 旗標，流程交給 lookup
 │   ├── bilibili/                # bilibili 領域命令樹（結構同 youtube）
+│   ├── applepodcast/            # apple-podcast 領域命令樹（結構同 youtube）
 │   └── lookup/
 │       └── lookup.go            # 各平台 get channel 共用流程：讀目標、查詢、輸出
 ├── svc/                         # 服務層：對外請求與解析
@@ -24,11 +25,16 @@ gx/
 │   │   ├── channel.go           # GetChannel()：ID、名稱、官方 RSS
 │   │   ├── target_test.go
 │   │   └── channel_test.go
-│   └── bilibili/
-│       ├── client.go            # Client、DEFAULT_BASE_URL（UID 已在輸入時不發請求）
+│   ├── bilibili/
+│   │   ├── client.go            # Client、DEFAULT_BASE_URL（UID 已在輸入時不發請求）
+│   │   ├── option.go            # 函式選項 + viper key
+│   │   ├── target.go            # ParseTarget()：UID / 空間網址
+│   │   └── channel.go           # GetChannel()；無 rss、無名稱
+│   └── applepodcast/
+│       ├── client.go            # Client、fetch()、DEFAULT_BASE_URL（iTunes lookup）
 │       ├── option.go            # 函式選項 + viper key
-│       ├── target.go            # ParseTarget()：UID / 空間網址
-│       └── channel.go           # GetChannel()；無 rss、無名稱
+│       ├── target.go            # ParseTarget()：collection ID / 節目網址
+│       └── channel.go           # GetChannel()：lookup → 名稱、正規網址、feedUrl
 ├── model/
 │   └── channel.go               # 各平台共用的標準輸出物件 Channel
 ├── render/
@@ -96,6 +102,14 @@ Bilibili 的 UP 主空間沒有對等的官方 feed（舊的分區 `/rss-N.xml` 
 那些網址不是來源站的公開頁、公共實例也不穩定，因此
 `gx bilibili get channel` 只回 UID 與空間網址，輸出**沒有** `rss` 欄位。
 
+### Apple Podcasts 走 iTunes lookup，不爬節目頁
+
+節目頁是 JS 渲染的，名稱與 feed 都不在穩定的 HTML 位置；iTunes lookup
+(`/lookup?id=<id>&entity=podcast`) 是公開 JSON，一次給齊 `collectionName` 與 `feedUrl`。
+lookup 對不存在的 ID 回 `200` 加 `resultCount: 0`，不是 404 —— 空結果要自己轉成 not found。
+domain 名 `apple-podcast` 帶平台前綴：podcast 是媒體型態而非平台，
+日後的其他 podcast 目錄（Spotify 等）各自是一個 domain。
+
 ### 頻道 ID 一律在上下文中比對，不比對 ID 形狀
 
 YouTube 頻道頁的 HTML 裡散落大量與頻道 ID 同形狀（`UC` + 22 字元 base64url）的隨機
@@ -126,3 +140,4 @@ npm run build                                  # go build -o bin/gx .
 
 測試不打外部網路：`svc/youtube` 的測試全部走 `httptest` 伺服器，
 以 `WithBaseURL` 注入。`svc/bilibili` 的 UID 已在輸入裡，測試不發 HTTP。
+`svc/applepodcast` 與 `cmd/applepodcast` 同樣以 `httptest` 假冒 lookup。

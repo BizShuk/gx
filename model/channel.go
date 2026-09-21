@@ -5,6 +5,8 @@ package model
 const (
 	PLATFORM_YOUTUBE  = "youtube"
 	PLATFORM_BILIBILI = "bilibili"
+	// PLATFORM_APPLE_PODCAST 與命令的 domain 名一致。
+	PLATFORM_APPLE_PODCAST = "apple-podcast"
 )
 
 // Channel 是所有平台「頻道」查詢的標準輸出物件。
