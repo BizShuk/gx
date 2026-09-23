@@ -1,19 +1,21 @@
 # README.todo
 
-## 待辦 (Pending)
+## 擷取 (Extraction)
+
+- [ ] [P2] [feature] 評估是否需要 `youtube get video`（影片 ID / 標題 / 頻道）
+- [ ] [P2] [feature] 評估是否需要解析 `b23.tv` 短鏈（落地後才知道是空間還是單支影片）
+
+## 已知限制 (Known Limitations)
+
+- 依賴 YouTube 公開頁面的 HTML 結構；對方改版時 `svc/youtube/extract.go` 的比對規則需要跟著調整（規則已依可靠度排序，通常只會退到下一條）。
+- 未處理需要登入或地區封鎖的頻道。
+- Bilibili 沒有官方 channel RSS；`gx` 不輸出、不代理 RSSHub 等第三方合成源。
+- `bilibili get channel` 不解析暱稱或單支影片網址。
+
+## Archive
 
 - [x] `youtube get channel` 支援批次輸入（多個 handle / 從 stdin 讀）
-- [ ] 評估是否需要 `youtube get video`（影片 ID / 標題 / 頻道）
 - [x] cmd 層補上 `youtube get channel` 的單元與批次測試
 - [x] `bilibili get channel`：UID / 空間網址 → 正規空間網址（無官方 RSS）
 - [x] `apple-podcast get channel`：節目網址（不收裸 ID）→ 名稱、正規網址、feed URL
 - [x] 通用網址解析 `svc/resolve` + `gx get channel <url>`，供 vid-note 以函式庫取用
-- [ ] 評估是否需要解析 `b23.tv` 短鏈（落地後才知道是空間還是單支影片）
-
-## 已知限制 (Known Limitations)
-
-- 依賴 YouTube 公開頁面的 HTML 結構；對方改版時 `svc/youtube/extract.go`
-  的比對規則需要跟著調整（規則已依可靠度排序，通常只會退到下一條）。
-- 未處理需要登入或地區封鎖的頻道。
-- Bilibili 沒有官方 channel RSS；`gx` 不輸出、不代理 RSSHub 等第三方合成源。
-- `bilibili get channel` 不解析暱稱或單支影片網址。
