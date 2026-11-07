@@ -51,7 +51,7 @@ gx/
 ├── package.json                 # 統一任務入口（dev/test/build/deploy/lint）
 ├── README.md                    # 業務定義與命令用法
 ├── README.todo                  # 待辦
-└── AGENTS.md -> CLAUDE.md
+└── AGENTS.md
 ```
 
 ## 技術棧 (Tech Stack)
