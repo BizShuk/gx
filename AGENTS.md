@@ -44,7 +44,7 @@ gx/
 │   └── lines.go                 # 預設：每行一個 key: value，記錄間空行
 ├── config/
 │   ├── config.go                # config.Default()：gosdk 設定載入
-│   └── default_settings.json    # 內嵌預設值，首次執行時寫入 ~/.config/gx/
+│   └── config/example/settings.example.json    # 內嵌預設值，首次執行時寫入 ~/.config/gx/
 ├── docs/
 │   ├── terminology.md           # 術語表
 │   └── memory/                  # 決策與操作記錄

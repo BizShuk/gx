@@ -2,7 +2,7 @@ package bilibili
 
 import "github.com/spf13/viper"
 
-// 設定 key：與 config/default_settings.json 的扁平欄位對應，
+// 設定 key：與 config/example/settings.example.json 的扁平欄位對應，
 // 由本套件自行讀取，呼叫端不需要把設定值一路搬進來。
 const KEY_BASE_URL = "bilibili_base_url"
 
