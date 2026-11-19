@@ -162,5 +162,5 @@ lookup 對不存在的 ID 回 200 加空結果，本命令將其視為 `podcast 
 ## 安裝 (Install)
 
 ```bash
-npm run deploy   # go install .
+npm run install  # go install .
 ```
